@@ -1,0 +1,1 @@
+import{r,o as a,c as o,h as t,w as e,i as n}from"./vendor.dcdaa76a.js";const s={name:"Index",data:()=>({count:0,drawer:!0,direction:"ltr",aside_size:"mini",isCollapse:!1}),props:{msg:String},methods:{}},i=n("打开应用");s.render=function(n,s,d,l,c,m){const u=r("router-link");return a(),o("div",null,[t(u,{to:"/monitor"},{default:e((()=>[i])),_:1})])};export default s;

@@ -1,0 +1,1 @@
+import{r,o as e,c as o,g as t,w as n,h as s}from"./vendor.e35663f7.js";const a={name:"Index",data:()=>({count:0,drawer:!0,direction:"ltr",aside_size:"mini",isCollapse:!1}),props:{msg:String},methods:{}},i=s("打开应用");a.render=function(s,a,d,l,m,u){const c=r("router-link");return e(),o("div",null,[t(c,{to:"/monitor"},{default:n((()=>[i])),_:1})])};export default a;
