@@ -1,14 +1,16 @@
 package crontabs
 
 import (
+	"gin-message/app/services"
 	"github.com/robfig/cron"
 	"log"
 )
 
 func Setup() {
 	c := cron.New()
-	c.AddFunc("0 0 */2 * * *", func() {
-		log.Println("定时爬虫获取样本跟踪数据")
+	c.AddFunc("* * * * * *", func() {
+		log.Println("每秒查询一次待发送的信息")
+		services.HandleMesssage()
 	})
 
 	c.Run()

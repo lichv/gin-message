@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"github.com/jinzhu/gorm"
 	lichv "github.com/lichv/go"
 )
@@ -45,56 +46,6 @@ func GetMessageConfigOne( query map[string]interface{},orderBy interface{}) ( *M
 	return &messageConfig, nil
 }
 
-func ExistMessageConfigByCode(code string) (b bool,err error) {
-	var messageConfig MessageConfig
-	err = db.Model(&MessageConfig{}).Select("code").Where("code = ? ",code).First(&messageConfig).Error
-	if err != nil && err != gorm.ErrRecordNotFound {
-		return false,err
-	}
-	return true, err
-}
-
-func GetMessageConfigPages( query map[string]interface{},orderBy interface{},pageNum int,pageSize int) ( []*MessageConfig, []error) {
-	var messageConfigs []*MessageConfig
-	var errs []error
-	model := db.Model(&MessageConfig{})
-	for key, value := range query {
-		b,err := lichv.In (MessageConfigFields,key)
-		if  err == nil && b{
-			model = model.Where(key + "= ?", value)
-		}
-	}
-	model =model.Offset(pageNum).Limit(pageSize).Order(orderBy).Find(&messageConfigs)
-	errs = model.GetErrors()
-
-	return messageConfigs, errs
-}
-
-func GetAllMessageConfigCode( query map[string]interface{},orderBy interface{},limit int) ( []string, []error) {
-	var messageConfigs []MessageConfig
-	var errs []error
-	var result []string
-
-	model := db.Table("demo_whitelist_user").Select("code")
-	for key, value := range query {
-		b,err := lichv.In (MessageConfigFields,key)
-		if  err == nil && b{
-			model = model.Where(key + "= ?", value)
-		}
-	}
-	if limit > 0 {
-		model =model.Limit(limit)
-	}
-	model =model.Order(orderBy).Find(&messageConfigs)
-	errs = model.GetErrors()
-
-	for _, v := range messageConfigs {
-		result = append(result, v.Code)
-	}
-
-	return result, errs
-}
-
 func GetMessageConfigs( query map[string]interface{},orderBy interface{},limit int) ( []*MessageConfig, []error) {
 	var MessageConfigs []*MessageConfig
 	var errs []error
@@ -121,25 +72,57 @@ func GetMessageConfigTotal(maps interface{}) (count int,err error) {
 	return count, err
 }
 
-func AddMessageConfig( data map[string]interface{}) error {
-	messageConfig := MessageConfig{
-		Id:data["id"].(int),
-		Code:data["code"].(string),
-		Name:data["name"].(string),
-		Owner:data["owner"].(string),
-		Provider:data["provider"].(string),
-		Type:data["type"].(string),
-		Data:data["data"].(string),
-		Datatype:data["datatype"].(string),
-		Options:data["options"].(string),
-		Flag:data["flag"].(bool),
-		State:data["state"].(bool),
+func AddMessageConfig( data map[string]interface{}) (int,error) {
+	messageConfig := MessageConfig{}
+	_,ok := data["id"]
+	if ok {
+		messageConfig.Id = data["id"].(int)
+	}
+	_,ok = data["code"]
+	if ok {
+		messageConfig.Code = data["code"].(string)
+	}
+	_,ok = data["name"]
+	if ok {
+		messageConfig.Name = data["name"].(string)
+	}
+	_,ok = data["owner"]
+	if ok {
+		messageConfig.Owner = data["owner"].(string)
+	}
+	_,ok = data["provider"]
+	if ok{
+		messageConfig.Provider = data["provider"].(string)
+	}
+	_,ok = data["type"]
+	if ok {
+		messageConfig.Type = data["type"].(string)
+	}
+	_,ok = data["data"]
+	if ok {
+		messageConfig.Data = data["data"].(string)
+	}
+	_,ok = data["Datatype"]
+	if ok {
+		messageConfig.Datatype = data["datatype"].(string)
+	}
+	_,ok = data["flag"]
+	if ok {
+		messageConfig.Flag = data["flag"].(bool)
+	}
+	_,ok = data["state"]
+	if ok {
+		messageConfig.State = data["state"].(bool)
+	}
 
+	if messageConfig.Code=="" || messageConfig.Name=="" || messageConfig.Type=="" || messageConfig.Provider=="" {
+		return 0,errors.New("参数为空")
 	}
+
 	if err:= db.Create(&messageConfig).Error;err != nil{
-		return err
+		return 0,err
 	}
-	return nil
+	return messageConfig.Id,nil
 }
 
 func EditMessageConfig( code string,data map[string]interface{}) error {

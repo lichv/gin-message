@@ -2,7 +2,6 @@ package utils
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"regexp"
 	"strings"
@@ -50,7 +49,6 @@ func ParseTemplateWithParams(template_content string,maps map[string]interface{}
 	reg := regexp.MustCompile(`{{\s*(.*?)\s*}}`)
 	submatchs := reg.FindAllStringSubmatch(template_content, -1)
 	for _,submatch := range submatchs{
-		fmt.Println(submatch)
 		tmp,_ := regexp.Compile(submatch[1])
 		template_content = tmp.ReplaceAllString(template_content,"."+submatch[1])
 	}

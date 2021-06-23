@@ -19,11 +19,6 @@ type MessageConfig struct {
 	State bool `json:"state" form:"state" gorm:"state"`
 }
 
-func ExistMessageConfigByCode(code string) (b bool,err error) {
-	b,err = models.ExistMessageConfigByCode(code)
-	return b, err
-}
-
 func GetMessageConfigTotal(maps interface{}) (count int,err error) {
 	count,err = models.GetMessageConfigTotal(map[string]interface{}{})
 	return count, err
@@ -59,28 +54,15 @@ func FindMessageConfigValueByCode( code string) (map[string]interface{}, error) 
 	return config,nil
 }
 
-func GetMessageConfigPages( query map[string]interface{},orderBy interface{},pageNum int,pageSize int) (messageConfigs []*MessageConfig, total int, errs []error) {
-	total,err := models.GetMessageConfigTotal(query)
-	if err != nil {
-		return nil,0,errs
-	}
-	us,errs := models.GetMessageConfigPages(query,orderBy,pageNum,pageSize)
-	messageConfigs = TransferMessageConfigs(us)
-	return messageConfigs,total,nil
-}
-func GetAllMessageConfigCode( query map[string]interface{},orderBy interface{},limit int)([]string,[]error){
-	codes, errors := models.GetAllMessageConfigCode(query, orderBy, limit)
-	return codes,errors
-}
+
 func GetMessageConfigs( query map[string]interface{},orderBy interface{},limit int) ([]*MessageConfig,[]error) {
 	users, errors := models.GetMessageConfigs(query, orderBy, limit)
 	messageConfigs := TransferMessageConfigs(users)
 	return messageConfigs,errors
 }
 
-func AddMessageConfig( data map[string]interface{}) (err error ){
-	err = models.AddMessageConfig(data)
-	return err
+func AddMessageConfig( data map[string]interface{}) (int, error ){
+	return  models.AddMessageConfig(data)
 }
 
 func EditMessageConfig( code string,data map[string]interface{}) (err error) {

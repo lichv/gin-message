@@ -1,7 +1,6 @@
 package services
 
 import (
-	"encoding/json"
 	"gin-message/app/models"
 	jwt2 "gin-message/utils/jwt"
 	"github.com/gin-gonic/gin"
@@ -11,21 +10,17 @@ import (
 
 type Syslog struct {
 	Id int `json:"id" form:"id" gorm:"id"`
-	Code string `json:"code" form:"code" gorm:"code"`
-	Name string `json:"name" form:"name" gorm:"name"`
-	Owner string `json:"owner" form:"owner" gorm:"owner"`
-	Provider string `json:"provider" form:"provider" gorm:"provider"`
-	Type string `json:"type" form:"type" gorm:"type"`
-	Data string `json:"data" form:"data" gorm:"data"`
-	Datatype string `json:"datatype" form:"datatype" gorm:"datatype"`
-	Options string `json:"options" form:"options" gorm:"options"`
-	Flag bool `json:"flag" form:"flag" gorm:"flag"`
-	State bool `json:"state" form:"state" gorm:"state"`
-}
-
-func ExistSyslogByCode(code string) (b bool,err error) {
-	b,err = models.ExistSyslogByCode(code)
-	return b, err
+	User string `json:"user" form:"user" gorm:"user"`
+	UserAgent string `json:"user_agent" form:"user_agent" gorm:"user_agent"`
+	Ip string `json:"ip" form:"ip" gorm:"ip"`
+	Token string `json:"token" form:"token" gorm:"token"`
+	Operation string `json:"operation" form:"opration" gorm:"operation"`
+	Target string `json:"target" form:"target" gorm:"target"`
+	Input string `json:"input" form:"input" gorm:"input"`
+	Result string `json:"result" form:"options" gorm:"options"`
+	Time int `json:"time" form:"time" gorm:"time"`
+	Flag int `json:"flag" form:"flag" gorm:"flag"`
+	State int `json:"state" form:"state" gorm:"state"`
 }
 
 func GetSyslogTotal(maps interface{}) (count int,err error) {
@@ -41,28 +36,6 @@ func GetSyslogOne( query map[string]interface{},orderBy interface{}) (*Syslog, e
 	return TransferSyslogModel(nu),nil
 }
 
-func FindSyslogValueByCode( code string) (map[string]interface{}, error) {
-	var nu *models.Syslog
-	var config map[string]interface{}
-	nu,err := models.GetSyslogOne(map[string]interface{}{"code":code},"code asc")
-	if err != nil {
-		return map[string]interface{}{},err
-	}
-	var res map[string]interface{}
-	if nu.Datatype== "json" {
-		err := json.Unmarshal([]byte(nu.Data), &res)
-		if err != nil{
-			return nil,err
-		}
-		return res,nil
-	}
-	err = json.Unmarshal([]byte(nu.Data), &config)
-	if err != nil {
-		return map[string]interface{}{},err
-	}
-	return config,nil
-}
-
 func GetSyslogPages( query map[string]interface{},orderBy interface{},pageNum int,pageSize int) (syslogs []*Syslog, total int, errs []error) {
 	total,err := models.GetSyslogTotal(query)
 	if err != nil {
@@ -72,10 +45,7 @@ func GetSyslogPages( query map[string]interface{},orderBy interface{},pageNum in
 	syslogs = TransferSyslogs(us)
 	return syslogs,total,nil
 }
-func GetAllSyslogCode( query map[string]interface{},orderBy interface{},limit int)([]string,[]error){
-	codes, errors := models.GetAllSyslogCode(query, orderBy, limit)
-	return codes,errors
-}
+
 func GetSyslogs( query map[string]interface{},orderBy interface{},limit int) ([]*Syslog,[]error) {
 	users, errors := models.GetSyslogs(query, orderBy, limit)
 	syslogs := TransferSyslogs(users)
@@ -83,13 +53,9 @@ func GetSyslogs( query map[string]interface{},orderBy interface{},limit int) ([]
 }
 
 func AddSyslog( data map[string]interface{}) (int, error ){
+
 	newid,err := models.AddSyslog(data)
 	return newid,err
-}
-
-func EditSyslog( code string,data map[string]interface{}) (err error) {
-	err = models.EditSyslog(code,data)
-	return err
 }
 
 func DeleteSyslog(maps map[string]interface{}) (err error) {
@@ -105,14 +71,15 @@ func ClearAllSyslog() (err error) {
 func TransferSyslogModel(u *models.Syslog)(syslog *Syslog){
 	syslog =  &Syslog{
 		Id:u.Id,
-		Code:u.Code,
-		Name:u.Name,
-		Owner:u.Owner,
-		Provider:u.Provider,
-		Type:u.Type,
-		Data:u.Data,
-		Datatype:u.Datatype,
-		Options:u.Options,
+		User:u.User,
+		UserAgent: u.UserAgent,
+		Ip:u.Ip,
+		Token: u.Token,
+		Operation: u.Operation,
+		Target: u.Target,
+		Input: u.Input,
+		Result: u.Result,
+		Time: u.Time,
 		Flag:u.Flag,
 		State:u.State,
 	}
@@ -126,8 +93,10 @@ func TransferSyslogs(us []*models.Syslog) (syslogs []*Syslog) {
 	return syslogs
 }
 
-
-func Log(c *gin.Context,target ,operation interface{})(int,error){
+func Log(target,operation interface{},input interface{}) (int,error) {
+	return models.AddSyslog(map[string]interface{}{"user":"system","user_agent":"system","token":"","IP":"127.0.0.1","target":lichv.Strval(target),"operation":lichv.Strval(operation),"input":lichv.Strval(input), "time": time.Now().Unix(), "flag": 1, "state": 1})
+}
+func LogFromContext(c *gin.Context,target ,operation interface{},input interface{})(int,error){
 	token := c.DefaultQuery("token", "")
 	if token == "" {
 		token = c.DefaultPostForm("token", "")
@@ -145,9 +114,5 @@ func Log(c *gin.Context,target ,operation interface{})(int,error){
 		return 0,err
 	}
 	user := claims.Code
-	newid,err := models.AddSyslog(map[string]interface{}{"user": user, "user_agent": user_agent, "token": token, "ip": ip, "target": lichv.Strval(target), "operation": lichv.Strval(operation), "time": time.Now().Unix(), "flag": 1, "state": 1})
-	if err != nil {
-		return 0 ,err
-	}
-	return newid,nil
+	return models.AddSyslog(map[string]interface{}{"user": user, "user_agent": user_agent, "token": token, "ip": ip, "target": lichv.Strval(target), "operation": lichv.Strval(operation),"input":lichv.Strval(input), "time": time.Now().Unix(), "flag": 1, "state": 1})
 }

@@ -1,12 +1,14 @@
 package models
 
 import (
+	"errors"
 	"github.com/jinzhu/gorm"
 	lichv "github.com/lichv/go"
 )
 
 type Message struct {
 	Id int `json:"id" form:"id" gorm:"id"`
+	Type string `json:"type" form:"type" gorm:"type"`
 	Provider string `json:"provider" form:"provider" gorm:"provider"`
 	Target string `json:"target" form:"target" gorm:"target"`
 	Template string `json:"template" form:"template" gorm:"template"`
@@ -15,8 +17,8 @@ type Message struct {
 	Result string `json:"result" form:"result" gorm:"result"`
 	Ptime int `json:"ptime" form:"ptime" gorm:"ptime"`
 	Dtime int `json:"dtime" form:"dtime" gorm:"dtime"`
-	Flag bool `json:"flag" form:"flag" gorm:"flag"`
-	State bool `json:"state" form:"state" gorm:"state"`
+	Flag int `json:"flag" form:"flag" gorm:"flag"`
+	State int `json:"state" form:"state" gorm:"state"`
 }
 
 var MessageFields = []string{"id", "type", "provider", "target", "template", "params", "content", "result", "ptime", "dtime", "flag", "state"}
@@ -70,31 +72,6 @@ func GetMessagePages( query map[string]interface{},orderBy interface{},pageNum i
 	return messages, errs
 }
 
-func GetAllMessageCode( query map[string]interface{},orderBy interface{},limit int) ( []int, []error) {
-	var messages []Message
-	var errs []error
-	var result []int
-
-	model := db.Table("demo_whitelist_user").Select("code")
-	for key, value := range query {
-		b,err := lichv.In (MessageFields,key)
-		if  err == nil && b{
-			model = model.Where(key + "= ?", value)
-		}
-	}
-	if limit > 0 {
-		model =model.Limit(limit)
-	}
-	model =model.Order(orderBy).Find(&messages)
-	errs = model.GetErrors()
-
-	for _, v := range messages {
-		result = append(result, v.Id)
-	}
-
-	return result, errs
-}
-
 func GetMessages( query map[string]interface{},orderBy interface{},limit int) ( []*Message, []error) {
 	var Messages []*Message
 	var errs []error
@@ -121,29 +98,72 @@ func GetMessageTotal(maps interface{}) (count int,err error) {
 	return count, err
 }
 
-func AddMessage( data map[string]interface{}) error {
-	message := Message{
-		Id:data["id"].(int),
-		Provider:data["provider"].(string),
-		Target:data["target"].(string),
-		Template:data["template"].(string),
-		Params:data["params"].(string),
-		Content:data["content"].(string),
-		Result:data["result"].(string),
-		Ptime:data["ptime"].(int),
-		Dtime:data["dtime"].(int),
-		Flag:data["flag"].(bool),
-		State:data["state"].(bool),
+func AddMessage( data map[string]interface{}) (int,error) {
+	message := Message{}
+	_,ok := data["id"]
+	if ok {
+		message.Id = lichv.IntVal(data["id"])
+	}
+	_,ok = data["type"]
+	if ok {
+		message.Type = lichv.Strval(data["type"])
+	}
+	_,ok = data["provider"]
+	if ok {
+		message.Provider = lichv.Strval(data["provider"])
+	}
+	_,ok = data["target"]
+	if ok {
+		message.Target = lichv.Strval(data["target"])
+	}
+	_,ok = data["template"]
+	if ok{
+		message.Template = lichv.Strval(data["template"])
+	}
+	_,ok = data["params"]
+	if ok {
+		message.Params = lichv.Strval(data["params"])
+	}
+	_,ok = data["content"]
+	if ok {
+		message.Content = lichv.Strval(data["content"])
+	}
+	_,ok = data["result"]
+	if ok {
+		message.Result = lichv.Strval(data["result"])
+	}
+	_,ok = data["ptime"]
+	if ok {
+		message.Ptime = lichv.IntVal(data["ptime"])
+	}
+	_,ok = data["dtime"]
+	if ok {
+		message.Dtime = lichv.IntVal(data["dtime"])
+	}
+	_,ok = data["flag"]
+	if ok {
+		message.Flag = lichv.IntVal(data["flag"])
+	}
+	_,ok = data["state"]
+	if ok {
+		message.State = lichv.IntVal(data["state"])
+	}
 
+	if message.Target == "" {
+		return 0,errors.New("目标为空")
 	}
+	if message.Template=="" && message.Params=="" && message.Content=="" {
+		return 0,errors.New("内容为空")
+	}
+
 	if err:= db.Create(&message).Error;err != nil{
-		return err
+		return 0,err
 	}
-	return nil
+	return message.Id,nil
 }
 
-func EditMessage( code string,data map[string]interface{}) error {
-	if err:= db.Model(&Message{}).Where("code=?",code).Updates(data).Error;err != nil{
+func ModifyMessage( id int,data map[string]interface{}) error {
+	if err:= db.Model(&Message{}).Where("id=?",id).Updates(data).Error;err != nil{
 		return err
 	}
 	return nil

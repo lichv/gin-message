@@ -2,6 +2,7 @@ package routers
 
 import (
 	Home "gin-message/app/controllers/home"
+	"gin-message/app/controllers/message"
 	"gin-message/app/middlewares"
 	"gin-message/utils/setting"
 	"github.com/gin-gonic/gin"
@@ -14,21 +15,16 @@ func InitRouter() *gin.Engine {
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
 	r.Use(favicon.New(path.Join(setting.AppSetting.RootPath, "favicon.ico")))
-	r.LoadHTMLGlob("./public/*.html")
-	r.Static("/static", "./public/static/")
+
 	r.Use(middlewares.Cors())
 
 	r.GET("/", Home.Index)
 
-	apiv1 := r.Group("/api/v1")
-	apiv1.Use(middlewares.JWT())
+	apiv1 := r.Group("/api/message/v1")
+	apiv1.Use(middlewares.Log())
 	{
-		apiv1.GET("/user", func(c *gin.Context) {
-			c.JSON(200,gin.H{
-				"state":2000,
-				"message":"ok",
-			})
-		})
+		apiv1.GET("/sms/sendVerifyCode",message.SendVerifyCode)
+		apiv1.GET("/sms/sendChuanglan",message.SendSmsByChuanglan)
 	}
 
 	return r

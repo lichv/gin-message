@@ -1,9 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"gin-message/app/models"
-	"gin-message/utils"
+	"gin-message/app/services"
 	"gin-message/utils/setting"
 )
 
@@ -27,11 +26,11 @@ func main() {
 	//	panic(err)
 	//}
 	//fmt.Println(buff.String())
-	result, err := utils.ParseTemplateWithParams("{{Name}} ID is {{ ID}}", map[string]interface{}{"Name": 223, "ID": 34534})
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-	fmt.Println(result)
+	//result, err := utils.ParseTemplateWithParams("{{Name}} ID is {{ ID}}", map[string]interface{}{"Name": 223, "ID": 34534})
+	//if err != nil {
+	//	fmt.Println(err.Error())
+	//}
+	//fmt.Println(result)
 	//reg := regexp.MustCompile(`{{\s*(.*?)\s*}}`)
 	//var content = "{{Name}} ID is {{ Id }}"
 	//submatchs := reg.FindAllStringSubmatch(content, -1)
@@ -44,5 +43,6 @@ func main() {
 	//all := reg.ReplaceAll([]byte(content), []byte(`{{\s*\.(.*?)\s}}`))
 	//all := reg.ReplaceAllLiteralString(content,`{{\s*\.(.*?)\s}}`)
 	//fmt.Println(string(all))
-
+	//services.AddChuanglanMessage("15814058249", "发送一条短信啦啦啦","")
+	services.HandleMesssage()
 }

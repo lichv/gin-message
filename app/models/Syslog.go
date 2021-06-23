@@ -1,25 +1,27 @@
 package models
 
 import (
+	"errors"
 	"github.com/jinzhu/gorm"
 	lichv "github.com/lichv/go"
 )
 
 type Syslog struct {
 	Id int `json:"id" form:"id" gorm:"id"`
-	Code string `json:"code" form:"code" gorm:"code"`
-	Name string `json:"name" form:"name" gorm:"name"`
-	Owner string `json:"owner" form:"owner" gorm:"owner"`
-	Provider string `json:"provider" form:"provider" gorm:"provider"`
-	Type string `json:"type" form:"type" gorm:"type"`
-	Data string `json:"data" form:"data" gorm:"data"`
-	Datatype string `json:"datatype" form:"datatype" gorm:"datatype"`
-	Options string `json:"options" form:"options" gorm:"options"`
-	Flag bool `json:"flag" form:"flag" gorm:"flag"`
-	State bool `json:"state" form:"state" gorm:"state"`
+	User string `json:"user" form:"user" gorm:"user"`
+	UserAgent string `json:"user_agent" form:"user_agent" gorm:"user_agent"`
+	Ip string `json:"ip" form:"ip" gorm:"ip"`
+	Token string `json:"token" form:"token" gorm:"token"`
+	Operation string `json:"operation" form:"opration" gorm:"operation"`
+	Target string `json:"target" form:"target" gorm:"target"`
+	Input string `json:"input" form:"input" gorm:"input"`
+	Result string `json:"result" form:"options" gorm:"options"`
+	Time int `json:"time" form:"time" gorm:"time"`
+	Flag int `json:"flag" form:"flag" gorm:"flag"`
+	State int `json:"state" form:"state" gorm:"state"`
 }
 
-var SyslogFields = []string{"id", "code", "name", "owner", "provider", "type", "data", "datatype", "options", "flag", "state"}
+var SyslogFields = []string{"id", "user", "user_agent", "ip", "token", "operation", "target", "input", "result", "time", "flag", "state"}
 
 func FindSyslogByCode( code string) ( syslog *Syslog, err error) {
 	err = db.Model(&Syslog{}).Where("code = ? ",code).First(&syslog).Error
@@ -70,30 +72,6 @@ func GetSyslogPages( query map[string]interface{},orderBy interface{},pageNum in
 	return syslogs, errs
 }
 
-func GetAllSyslogCode( query map[string]interface{},orderBy interface{},limit int) ( []string, []error) {
-	var syslogs []Syslog
-	var errs []error
-	var result []string
-
-	model := db.Table("demo_whitelist_user").Select("code")
-	for key, value := range query {
-		b,err := lichv.In (SyslogFields,key)
-		if  err == nil && b{
-			model = model.Where(key + "= ?", value)
-		}
-	}
-	if limit > 0 {
-		model =model.Limit(limit)
-	}
-	model =model.Order(orderBy).Find(&syslogs)
-	errs = model.GetErrors()
-
-	for _, v := range syslogs {
-		result = append(result, v.Code)
-	}
-
-	return result, errs
-}
 
 func GetSyslogs( query map[string]interface{},orderBy interface{},limit int) ( []*Syslog, []error) {
 	var Syslogs []*Syslog
@@ -122,20 +100,59 @@ func GetSyslogTotal(maps interface{}) (count int,err error) {
 }
 
 func AddSyslog( data map[string]interface{}) (int,error ){
-	syslog := Syslog{
-		Id:data["id"].(int),
-		Code:data["code"].(string),
-		Name:data["name"].(string),
-		Owner:data["owner"].(string),
-		Provider:data["provider"].(string),
-		Type:data["type"].(string),
-		Data:data["data"].(string),
-		Datatype:data["datatype"].(string),
-		Options:data["options"].(string),
-		Flag:data["flag"].(bool),
-		State:data["state"].(bool),
-
+	syslog := Syslog{}
+	_,ok := data["id"]
+	if ok {
+		syslog.Id = data["id"].(int)
 	}
+	_,ok = data["user"]
+	if ok{
+		syslog.User = lichv.Strval(data["user"])
+	}
+	_,ok = data["user_agent"]
+	if ok {
+		syslog.UserAgent = lichv.Strval(data["user_agent"])
+	}
+	_,ok = data["ip"]
+	if ok {
+		syslog.Ip = lichv.Strval(data["ip"])
+	}
+	_,ok = data["token"]
+	if ok {
+		syslog.Token = lichv.Strval(data["token"])
+	}
+	_,ok = data["operation"]
+	if ok {
+		syslog.Operation = lichv.Strval(data["operation"])
+	}
+	_,ok = data["target"]
+	if ok {
+		syslog.Target = lichv.Strval(data["target"])
+	}
+	_,ok = data["input"]
+	if ok {
+		syslog.Input = lichv.Strval(data["input"])
+	}
+	_,ok = data["result"]
+	if ok {
+		syslog.Result = lichv.Strval(data["result"])
+	}
+	_,ok = data["time"]
+	if ok {
+		syslog.Time = lichv.IntVal(data["time"])
+	}
+	_,ok = data["flag"]
+	if ok {
+		syslog.Flag = lichv.IntVal(data["flag"])
+	}
+	_,ok = data["state"]
+	if ok {
+		syslog.State = lichv.IntVal(data["state"])
+	}
+	if syslog.Operation== "" && syslog.Input=="" {
+		return 0,errors.New("记录数据为空")
+	}
+
 	if err:= db.Create(&syslog).Error;err != nil{
 		return 0,err
 	}

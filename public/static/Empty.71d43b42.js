@@ -1,1 +1,0 @@
-import{o as r,c as e}from"./vendor.e35663f7.js";const o={name:"Error",data:()=>({count:0,drawer:!0,direction:"ltr",aside_size:"mini",isCollapse:!1}),props:{msg:String},methods:{}};o.render=function(o,n,t,i,s,a){return r(),e("div",null,"404")};export default o;

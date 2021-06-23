@@ -19,12 +19,13 @@ type MessageTemplate struct {
 
 var MessageTemplateFields = []string{"id", "code", "name", "type", "owner", "scope", "content", "flag", "state"}
 
-func FindMessageTemplateByCode( code string) ( messageTemplate *MessageTemplate, err error) {
-	err = db.Model(&MessageTemplate{}).Where("code = ? ",code).First(&messageTemplate).Error
+func FindMessageTemplateByCode( code string) ( *MessageTemplate, error) {
+	var messageTemplate MessageTemplate
+	err := db.Model(&MessageTemplate{}).Where("code = ? ",code).First(&messageTemplate).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return &MessageTemplate{},err
 	}
-	return
+	return &messageTemplate,nil
 }
 
 func GetMessageTemplateOne( query map[string]interface{},orderBy interface{}) ( *MessageTemplate,error) {
